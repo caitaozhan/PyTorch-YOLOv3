@@ -21,6 +21,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import NullLocator
 
+# python detect.py --image_folder data/samples2 --weights_path checkpoints/yolov3_ckpt_5.pth --non_img
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str, default="data/samples", help="path to dataset")
@@ -33,6 +35,7 @@ if __name__ == "__main__":
     parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
     parser.add_argument("--img_size", type=int, default=416, help="size of each image dimension")
     parser.add_argument("--checkpoint_model", type=str, help="path to checkpoint model")
+    parser.add_argument("--non_img", action="store_true", help="if the input data is numpy array")
     opt = parser.parse_args()
     print(opt)
 
@@ -53,7 +56,7 @@ if __name__ == "__main__":
     model.eval()  # Set in evaluation mode
 
     dataloader = DataLoader(
-        ImageFolder(opt.image_folder, img_size=opt.img_size),
+        ImageFolder(opt.image_folder, img_size=opt.img_size, non_img=opt.non_img),
         batch_size=opt.batch_size,
         shuffle=False,
         num_workers=opt.n_cpu,
@@ -69,6 +72,8 @@ if __name__ == "__main__":
     print("\nPerforming object detection:")
     prev_time = time.time()
     for batch_i, (img_paths, input_imgs) in enumerate(dataloader):
+        if batch_i != 92:
+            continue
         # Configure input
         input_imgs = Variable(input_imgs.type(Tensor))
 
@@ -98,7 +103,10 @@ if __name__ == "__main__":
         print("(%d) Image: '%s'" % (img_i, path))
 
         # Create plot
-        img = np.array(Image.open(path))
+        if opt.non_img:
+            img = np.load(path)
+        else:
+            img = np.array(Image.open(path))
         plt.figure()
         fig, ax = plt.subplots(1)
         ax.imshow(img)
@@ -123,14 +131,10 @@ if __name__ == "__main__":
                 # Add the bbox to the plot
                 ax.add_patch(bbox)
                 # Add label
-                plt.text(
-                    x1,
-                    y1,
-                    s=classes[int(cls_pred)],
-                    color="white",
-                    verticalalignment="top",
-                    bbox={"color": color, "pad": 0},
-                )
+                if opt.non_img:
+                    pass
+                else:
+                    plt.text(x1, y1, s=classes[int(cls_pred)], color="white", verticalalignment="top", bbox={"color": color, "pad": 0},)
 
         # Save generated image with detections
         plt.axis("off")

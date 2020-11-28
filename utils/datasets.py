@@ -39,14 +39,18 @@ def random_resize(images, min_size=288, max_size=448):
 
 
 class ImageFolder(Dataset):
-    def __init__(self, folder_path, img_size=416):
+    def __init__(self, folder_path, img_size, non_img):
         self.files = sorted(glob.glob("%s/*.*" % folder_path))
         self.img_size = img_size
+        self.non_img = non_img
 
     def __getitem__(self, index):
         img_path = self.files[index % len(self.files)]
         # Extract image as PyTorch tensor
-        img = transforms.ToTensor()(Image.open(img_path))
+        if self.non_img:
+            img = transforms.ToTensor()(np.load(img_path))
+        else:
+            img = transforms.ToTensor()(Image.open(img_path))
         # Pad to square resolution
         img, _ = pad_to_square(img, 0)
         # Resize
@@ -59,12 +63,16 @@ class ImageFolder(Dataset):
 
 
 class ListDataset(Dataset):
-    def __init__(self, list_path, img_size=416, augment=True, multiscale=True, normalized_labels=True):
+    def __init__(self, list_path, img_size=416, augment=True, multiscale=True, normalized_labels=True, non_img=False):
+        '''
+        Args:
+            is_img -- bool -- Customized for opening non images (np array)
+        '''
         with open(list_path, "r") as file:
             self.img_files = file.readlines()
 
         self.label_files = [
-            path.replace("images", "labels").replace(".png", ".txt").replace(".jpg", ".txt")
+            path.replace("images", "labels").replace(".png", ".txt").replace(".jpg", ".txt").replace(".npy", ".txt")
             for path in self.img_files
         ]
         self.img_size = img_size
@@ -72,9 +80,10 @@ class ListDataset(Dataset):
         self.augment = augment
         self.multiscale = multiscale
         self.normalized_labels = normalized_labels
-        self.min_size = self.img_size - 3 * 32
-        self.max_size = self.img_size + 3 * 32
+        self.min_size = self.img_size                # customize: fix size
+        self.max_size = self.img_size
         self.batch_count = 0
+        self.non_img = non_img
 
     def __getitem__(self, index):
 
@@ -85,7 +94,10 @@ class ListDataset(Dataset):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
 
         # Extract image as PyTorch tensor
-        img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
+        if self.non_img:
+            img = transforms.ToTensor()(np.load(img_path))
+        else:
+            img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
 
         # Handle images with less than three channels
         if len(img.shape) != 3:

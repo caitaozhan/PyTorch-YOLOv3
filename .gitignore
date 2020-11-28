@@ -15,3 +15,5 @@ checkpoints
 .virtual_documents
 logs
 environment
+custom/
+deepmtl-60

@@ -23,10 +23,16 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 
+# if __name__ == "__main__":
+#     # mydataset = ListDataset('data/coco/trainvalno5k.txt')
+#     mydataset = ListDataset('data/deepmtl-60/train.txt', is_img=False)
+#     print(mydataset[0])
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=6, help="number of epochs")
-    parser.add_argument("--batch_size", type=int, default=4, help="size of each image batch")
+    parser.add_argument("--batch_size", type=int, default=6, help="size of each image batch")
     parser.add_argument("--gradient_accumulations", type=int, default=2, help="number of gradient accums before step")
     parser.add_argument("--model_def", type=str, default="config/yolov3.cfg", help="path to model definition file")
     parser.add_argument("--data_config", type=str, default="config/coco.data", help="path to data config file")
@@ -37,6 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--evaluation_interval", type=int, default=1, help="interval evaluations on validation set")
     parser.add_argument("--compute_map", default=False, help="if True computes mAP every tenth batch")
     parser.add_argument("--multiscale_training", default=True, help="allow for multi-scale training")
+    parser.add_argument("--non_img", action="store_true", help="if the input data is numpy array")
     opt = parser.parse_args()
     print(opt)
 
@@ -65,7 +72,7 @@ if __name__ == "__main__":
             model.load_darknet_weights(opt.pretrained_weights)
 
     # Get dataloader
-    dataset = ListDataset(train_path, augment=True, multiscale=opt.multiscale_training)
+    dataset = ListDataset(train_path, augment=True, multiscale=opt.multiscale_training, non_img=opt.non_img)
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=opt.batch_size,
@@ -148,6 +155,8 @@ if __name__ == "__main__":
 
             model.seen += imgs.size(0)
 
+            # break
+
         if epoch % opt.evaluation_interval == 0:
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
@@ -159,6 +168,8 @@ if __name__ == "__main__":
                 nms_thres=0.5,
                 img_size=opt.img_size,
                 batch_size=8,
+                num_workers=opt.n_cpu,
+                non_img=opt.non_img
             )
             evaluation_metrics = [
                 ("val_precision", precision.mean()),
@@ -177,3 +188,6 @@ if __name__ == "__main__":
 
         if epoch % opt.checkpoint_interval == 0:
             torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_%d.pth" % epoch)
+
+
+# python train.py --model_def config/yolov3-custom.cfg --data_config config/deepmtl-60.data --non_img
