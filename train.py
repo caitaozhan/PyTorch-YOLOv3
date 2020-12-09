@@ -32,7 +32,7 @@ import torch.optim as optim
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=6, help="number of epochs")
-    parser.add_argument("--batch_size", type=int, default=6, help="size of each image batch")
+    parser.add_argument("--batch_size", type=int, default=8, help="size of each image batch")
     parser.add_argument("--gradient_accumulations", type=int, default=2, help="number of gradient accums before step")
     parser.add_argument("--model_def", type=str, default="config/yolov3.cfg", help="path to model definition file")
     parser.add_argument("--data_config", type=str, default="config/coco.data", help="path to data config file")
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     )
 
     optimizer = torch.optim.Adam(model.parameters())
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
     metrics = [
         "grid_size",
@@ -157,7 +158,9 @@ if __name__ == "__main__":
 
             # break
 
-        if epoch % opt.evaluation_interval == 0:
+        scheduler.step()
+
+        if epoch % opt.evaluation_interval == -1:  # -1 means no evaluation
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
             precision, recall, AP, f1, ap_class = evaluate(

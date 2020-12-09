@@ -1,0 +1,8 @@
+# data
+deepmtl-61 is using 32 maximum filters
+deepmtl-62 is using 64 maximum filters
+everything else is the same
+
+
+# model
+yolov3-custom-class.cfg: only customize the number of class, which is 1
