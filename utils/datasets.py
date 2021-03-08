@@ -82,6 +82,8 @@ class ListDataset(Dataset):
         self.normalized_labels = normalized_labels
         self.min_size = self.img_size                # customize: fix size
         self.max_size = self.img_size
+        # self.min_size = self.img_size - 3 * 32
+        # self.max_size = self.img_size + 3 * 32
         self.batch_count = 0
         self.non_img = non_img
 

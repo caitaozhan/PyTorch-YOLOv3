@@ -20,5 +20,4 @@ deepmtl-60
 deepmtl-61
 deepmtl*
 *.ipynb_checkpoints
-data/samples3*
-data/samples4*
+data/samples*
