@@ -18,6 +18,7 @@ environment
 custom/
 deepmtl-60
 deepmtl-61
-deepmtl*
+data/deepmtl*
 *.ipynb_checkpoints
 data/samples*
+data/

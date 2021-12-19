@@ -1,0 +1,6 @@
+classes=1
+train=data/deepmtl-305/train.txt
+valid=data/deepmtl-305/valid.txt
+names=data/deepmtl.names
+backup=backup/
+eval=coco
