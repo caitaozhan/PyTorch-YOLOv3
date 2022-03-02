@@ -23,11 +23,6 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 
-# if __name__ == "__main__":
-#     # mydataset = ListDataset('data/coco/trainvalno5k.txt')
-#     mydataset = ListDataset('data/deepmtl-60/train.txt', is_img=False)
-#     print(mydataset[0])
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
